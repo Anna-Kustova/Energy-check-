@@ -327,66 +327,7 @@ var SHEETS=[
    card({accent:true,title:"С Новым годом!",quote:"Сегодня ничего не надо успевать. Иди и живи."})];}}
 ];
 var TOTAL=SHEETS.length;
-function pad(i){return (i<10?"0":"")+i;}/* --- render --- */
-var out="", chips="";
-SHEETS.forEach(function(s,i){
-  n=i+1; ki=0;
-  var body=s.body().join("");
-  var ek="s"+n+".e";
-  var batt='<div class="batt" data-k="'+ek+'"><span class="bl">Уровень моей энергии</span><div class="bcol"><div class="cells">'+[1,2,3,4,5].map(function(j){return '<input type="checkbox" class="cell" data-i="'+j+'" aria-label="Энергия '+(j*20)+'%">';}).join("")+'</div><div class="scale"><span>0%</span><span>100%</span></div></div><span class="bval" aria-live="polite"></span></div>';
-  out+='<section class="sheet" id="s'+n+'" data-title="'+esc("Серия "+pad(n)+". "+s.title)+'" aria-labelledby="h'+n+'">'+
-    '<div class="shead"><span class="tag">'+esc(s.tag)+'</span><span class="ser">Серия '+pad(n)+' / '+TOTAL+'</span></div>'+
-    '<h2 id="h'+n+'">'+esc(s.title)+'</h2><p class="sub">'+esc(s.sub)+'</p>'+body+
-    '<textarea class="wl" rows="2" data-k="s'+n+'.w" data-l="'+esc("Серия "+pad(n)+". Заметки")+'" aria-label="Заметки" placeholder="Заметки"></textarea>'+
-    '<div class="sfoot"><small>Энергия для жизни</small>'+batt+'</div></section>';
-  chips+='<a class="chip" href="#s'+n+'" data-t="s'+n+'" title="'+esc(s.title)+'">'+pad(n)+'</a>';
-});
-document.getElementById("sheets").innerHTML=out;
-document.getElementById("chips").innerHTML=chips;
-if(memOnly)document.getElementById("warn").hidden=false;
-
-/* --- state --- */
-var MARKS=["","✓","→","»","×"], timer=null;
-function save(){ 
-  if(memOnly) return; 
-  try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){ memOnly=true; }
-  clearTimeout(timer); 
-  timer=setTimeout(function(){ saveToCloud(); }, 600); 
-}
-
-function paintBatt(b){var v=+S[b.dataset.k]||0;b.querySelectorAll(".cell").forEach(function(c){c.checked=(+c.dataset.i<=v);});var t=b.querySelector(".bval");if(t)t.textContent=v?(v*20)+"%":"";}
-function progress(){var all=document.querySelectorAll('input[type=checkbox]:not(.cell):not(.hid)'),d=0;all.forEach(function(c){if(c.checked)d++;});document.getElementById("prog").textContent="Отмечено "+d+" из "+all.length;}
-function paint(){
-  document.querySelectorAll("input.ln,textarea.wl").forEach(function(el){el.value=S[el.dataset.k]||"";});
-  document.querySelectorAll('input[type=checkbox]:not(.cell):not(.hid)').forEach(function(el){el.checked=!!S[el.dataset.k];});
-  document.querySelectorAll("select.mark").forEach(function(el){el.value=S[el.dataset.k]||"";el.classList.toggle("set",!!el.value);});
-  document.querySelectorAll(".batt").forEach(paintBatt);
-  progress();
-}
-paint();
-
-function onText(el){el.addEventListener("input",function(){if(el.value)S[el.dataset.k]=el.value;else delete S[el.dataset.k];save();});
-  el.addEventListener("keydown",function(e){if(e.key!=="Enter")return;e.preventDefault();var all=[].slice.call(document.querySelectorAll("input.ln")),i=all.indexOf(el);if(all[i+1])all[i+1].focus();else el.blur();});}
-function onCheck(el){el.addEventListener("change",function(){if(el.checked)S[el.dataset.k]=1;else delete S[el.dataset.k];save();progress();});}
-function onMark(m){m.addEventListener("change",function(){if(m.value)S[m.dataset.k]=m.value;else delete S[m.dataset.k];m.classList.toggle("set",!!m.value);save();});}
-function onCell(c){c.addEventListener("change",function(){var bt=c.closest(".batt"),i=+c.dataset.i,nv=c.checked?i:i-1;if(nv>0)S[bt.dataset.k]=nv;else delete S[bt.dataset.k];paintBatt(bt);save();});}
-function onChip(a){a.addEventListener("click",function(e){e.preventDefault();var el=document.getElementById(a.dataset.t);if(el){var rm=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;el.scrollIntoView({behavior:rm?"auto":"smooth",block:"start"});}});}
-document.querySelectorAll("input.ln").forEach(onText);
-document.querySelectorAll("textarea.wl").forEach(function(el){el.addEventListener("input",function(){if(el.value)S[el.dataset.k]=el.value;else delete S[el.dataset.k];save();});});
-document.querySelectorAll("input[type=checkbox]:not(.cell):not(.hid)").forEach(onCheck);
-document.querySelectorAll("select.mark").forEach(onMark);
-document.querySelectorAll("input.cell").forEach(onCell);
-document.querySelectorAll("a.chip").forEach(onChip);
-
-var chipEls={};document.querySelectorAll("a.chip").forEach(function(a){chipEls[a.dataset.t]=a;});
-function setActive(id){Object.keys(chipEls).forEach(function(k){var on=k===id;if(on)chipEls[k].setAttribute("aria-current","true");else chipEls[k].removeAttribute("aria-current");});var a=chipEls[id],nav=document.getElementById("chips");if(a&&nav){nav.scrollLeft=a.offsetLeft-nav.clientWidth/2+a.offsetWidth/2;}}
-if("IntersectionObserver" in window){
-  var io=new IntersectionObserver(function(es){es.forEach(function(en){if(en.isIntersecting)setActive(en.target.id);});},{rootMargin:"-25% 0px -65% 0px"});
-  document.querySelectorAll("section.sheet").forEach(function(s){io.observe(s);});
-}
-setActive("s1");
-
-function buildText(){
+function pad(i){return (i<10?"0":"")+i;}function buildText(){
   var parts=[];
   document.querySelectorAll("section.sheet").forEach(function(sec){
     var lines=[];
@@ -442,44 +383,7 @@ apEl.addEventListener("change",function(){
 });
 })();
 </script>
-<!-- Supabase Client Library & Cloud Sync Init -->
+<!-- Supabase SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-(function(){
-  var SUPABASE_URL = "https://auzczvovdjhtpoebdwwvh.supabase.co";
-  var SUPABASE_KEY = "sb_publishable_dj0uwnaQuP47WBM4u1bbxQ_F2rKudoe";
-  var supabaseClient = null;
-  var cloudKey = "energy_check_cloud_data";
-
-  try {
-    if (window.supabase) {
-      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    }
-  } catch(e) { console.error("Supabase init error", e); }
-
-  window.saveToCloud = async function() {
-    if(!supabaseClient) return;
-    try {
-      var localData = {};
-      try { localData = JSON.parse(localStorage.getItem("energycheck.2026.v1") || "{}"); } catch(e){}
-      await supabaseClient.from('app_store').upsert({ id: cloudKey, payload: localData });
-    } catch(e){ console.error("Cloud save error", e); }
-  };
-
-  async function loadFromCloud(){
-    if(!supabaseClient) return;
-    try {
-      var res = await supabaseClient.from('app_store').select('payload').eq('id', cloudKey).maybeSingle();
-      if(res.data && res.data.payload) {
-        localStorage.setItem("energycheck.2026.v1", JSON.stringify(res.data.payload));
-        if(typeof paint === "function") paint();
-        else location.reload();
-      }
-    } catch(e){ console.error("Cloud load error", e); }
-  }
-
-  if(supabaseClient) { loadFromCloud(); }
-})();
-</script>
 </body>
 </html>
